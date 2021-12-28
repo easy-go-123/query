@@ -28,7 +28,7 @@ func Orm2Values(s interface{}, values url.Values) error {
 
 // UrlJoin .
 // nolint: revive
-func UrlJoin(a, b string) (string, error) {
+func UrlJoin(a, b string, noQuery bool) (string, error) {
 	a = strings.Trim(a, "\r\n \t")
 	b = strings.Trim(b, "\r\n \t")
 
@@ -40,12 +40,24 @@ func UrlJoin(a, b string) (string, error) {
 		a += "/"
 	}
 
+	if noQuery {
+		if strings.Contains(a, "&") {
+			return "", errFail
+		}
+	}
+
 	if b == "" {
 		return a, nil
 	}
 
 	if b[0:1] == "/" {
 		b = b[1:]
+	}
+
+	if noQuery {
+		if strings.Contains(b, "&") {
+			return "", errFail
+		}
 	}
 
 	return a + b, nil
@@ -60,19 +72,27 @@ func UrlAddQueryString(u, k, v string) string {
 	return UrlAddQuery(u, vals)
 }
 
-// UrlAddQuery .
+// UrlAddRawQuery .
 // nolint: revive
-func UrlAddQuery(u string, vals url.Values) string {
+func UrlAddRawQuery(u, rawQuery string) string {
+	rawQuery = strings.TrimPrefix(rawQuery, "?")
+
 	idx := strings.Index(u, "?")
 	if idx == -1 {
-		return u + "?" + vals.Encode()
+		return u + "?" + rawQuery
 	}
 
 	if idx == len(u)-1 {
-		return u + vals.Encode()
+		return u + rawQuery
 	}
 
-	return u + "&" + vals.Encode()
+	return u + "&" + rawQuery
+}
+
+// UrlAddQuery .
+// nolint: revive
+func UrlAddQuery(u string, vals url.Values) string {
+	return UrlAddRawQuery(u, vals.Encode())
 }
 
 // UrlUpdateQueryString 注意：不处理一个key对应多个value的情况.
