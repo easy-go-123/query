@@ -69,6 +69,9 @@ func UrlAddQueryString(u, k, v string) string {
 
 // nolint: revive
 func UrlUpdateQueryString(u, k, v string) string {
+	k = url.QueryEscape(k)
+	v = url.QueryEscape(v)
+
 	qp := strings.Index(u, "?")
 	if qp == -1 || qp == len(u)-1 {
 		return UrlAddQueryString(u, k, v)
