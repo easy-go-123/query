@@ -75,3 +75,85 @@ func Test2(t *testing.T) {
 
 	assert.True(t, reflect.DeepEqual(b, b2))
 }
+
+// nolint
+func TestUrlJoin(t *testing.T) {
+	type args struct {
+		a string
+		b string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{"", args{"https://www.baidu.com", "index.html"}, "https://www.baidu.com/index.html", false},
+		{"", args{"https://www.baidu.com/", "index.html"}, "https://www.baidu.com/index.html", false},
+		{"", args{"https://www.baidu.com/", "/index.html"}, "https://www.baidu.com/index.html", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := UrlJoin(tt.args.a, tt.args.b)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UrlJoin() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("UrlJoin() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// nolint
+func TestUrlAddQueryString(t *testing.T) {
+	type args struct {
+		u string
+		k string
+		v string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"", args{"https://www.baidu.com", "k", "v"}, "https://www.baidu.com?k=v"},
+		{"", args{"https://www.baidu.com?", "k", "v"}, "https://www.baidu.com?k=v"},
+		{"", args{"https://www.baidu.com?v=1", "k", "v"}, "https://www.baidu.com?v=1&k=v"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := UrlAddQueryString(tt.args.u, tt.args.k, tt.args.v); got != tt.want {
+				t.Errorf("UrlAddQueryString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// nolint
+func TestUrlUpdateQueryString(t *testing.T) {
+	type args struct {
+		u string
+		k string
+		v string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"", args{"https://www.baidu.com", "k", "v"}, "https://www.baidu.com?k=v"},
+		{"", args{"https://www.baidu.com?", "k", "v"}, "https://www.baidu.com?k=v"},
+		{"", args{"https://www.baidu.com?a=b", "k", "v"}, "https://www.baidu.com?a=b&k=v"},
+		{"", args{"https://www.baidu.com?k=k2&z=z", "k", "v"}, "https://www.baidu.com?k=v&z=z"},
+		{"", args{"https://www.baidu.com?k=ddd", "k", "v"}, "https://www.baidu.com?k=v"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := UrlUpdateQueryString(tt.args.u, tt.args.k, tt.args.v); got != tt.want {
+				t.Errorf("UrlUpdateQueryString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
