@@ -26,6 +26,7 @@ func Orm2Values(s interface{}, values url.Values) error {
 	return query.Marshal(s, values)
 }
 
+// UrlJoin .
 // nolint: revive
 func UrlJoin(a, b string) (string, error) {
 	a = strings.Trim(a, "\r\n \t")
@@ -50,11 +51,18 @@ func UrlJoin(a, b string) (string, error) {
 	return a + b, nil
 }
 
+// UrlAddQueryString .
 // nolint: revive
 func UrlAddQueryString(u, k, v string) string {
 	vals := url.Values{}
 	vals.Set(k, v)
 
+	return UrlAddQuery(u, vals)
+}
+
+// UrlAddQuery .
+// nolint: revive
+func UrlAddQuery(u string, vals url.Values) string {
 	idx := strings.Index(u, "?")
 	if idx == -1 {
 		return u + "?" + vals.Encode()
@@ -67,19 +75,25 @@ func UrlAddQueryString(u, k, v string) string {
 	return u + "&" + vals.Encode()
 }
 
+// UrlUpdateQueryString 注意：不处理一个key对应多个value的情况.
 // nolint: revive
-func UrlUpdateQueryString(u, k, v string) string {
+func UrlUpdateQueryString(u, k, v string) (string, error) {
 	k = url.QueryEscape(k)
 	v = url.QueryEscape(v)
 
 	qp := strings.Index(u, "?")
 	if qp == -1 || qp == len(u)-1 {
-		return UrlAddQueryString(u, k, v)
+		return UrlAddQueryString(u, k, v), nil
 	}
 
 	idx := strings.Index(u[qp:], k+"=")
 	if idx == -1 {
-		return UrlAddQueryString(u, k, v)
+		return UrlAddQueryString(u, k, v), nil
+	}
+
+	idx2 := strings.Index(u[qp+idx+1:], k+"=")
+	if idx2 != -1 {
+		return "", errFail
 	}
 
 	idxE := strings.Index(u[qp+idx:], "&")
@@ -93,5 +107,5 @@ func UrlUpdateQueryString(u, k, v string) string {
 		r += u[qp+idxE+1:]
 	}
 
-	return r
+	return r, nil
 }

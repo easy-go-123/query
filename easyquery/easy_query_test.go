@@ -139,20 +139,27 @@ func TestUrlUpdateQueryString(t *testing.T) {
 		v string
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name    string
+		args    args
+		want    string
+		wantErr bool
 	}{
-		{"", args{"https://www.baidu.com", "k", "v"}, "https://www.baidu.com?k=v"},
-		{"", args{"https://www.baidu.com?", "k", "v"}, "https://www.baidu.com?k=v"},
-		{"", args{"https://www.baidu.com?a=b", "k", "v"}, "https://www.baidu.com?a=b&k=v"},
-		{"", args{"https://www.baidu.com?k=k2&z=z", "k", "v"}, "https://www.baidu.com?k=v&z=z"},
-		{"", args{"https://www.baidu.com?k=ddd", "k", "v"}, "https://www.baidu.com?k=v"},
+		{"", args{"https://www.baidu.com", "k", "v"}, "https://www.baidu.com?k=v", false},
+		{"", args{"https://www.baidu.com?", "k", "v"}, "https://www.baidu.com?k=v", false},
+		{"", args{"https://www.baidu.com?a=b", "k", "v"}, "https://www.baidu.com?a=b&k=v", false},
+		{"", args{"https://www.baidu.com?k=k2&z=z", "k", "v"}, "https://www.baidu.com?k=v&z=z", false},
+		{"", args{"https://www.baidu.com?k=ddd", "k", "v"}, "https://www.baidu.com?k=v", false},
+		{"", args{"https://www.baidu.com?k=ddd&a=b&k=aa", "k", "v"}, "", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := UrlUpdateQueryString(tt.args.u, tt.args.k, tt.args.v); got != tt.want {
-				t.Errorf("UrlUpdateQueryString() = %v, want %v", got, tt.want)
+			got, err := UrlUpdateQueryString(tt.args.u, tt.args.k, tt.args.v)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UrlUpdateQueryString() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("UrlUpdateQueryString() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
